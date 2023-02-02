@@ -83,61 +83,61 @@ void* handleClient(void* arg) {
     if (unique) {
         for (const auto& [name, fd] : usernames) {
             if (fd != clientFd) {
-                char message1[buffer_size] = "Joined:";
+                char message2[buffer_size] = "Joined:";
                 int i = 0;
                 for(; i < username.length(); i++){
-                    message1[i + 7] = username[i];
+                    message2[i + 7] = username[i];
                 }
-                write(fd, message1, buffer_size);
-                char message2[buffer_size] = "Joined:";
+                write(fd, message2, buffer_size);
+                char message3[buffer_size] = "Joined:";
                 i = 0;
                 for(; i < name.length(); i++){
-                    message2[i + 7] = name[i];
+                    message3[i + 7] = name[i];
                 }
-                write(clientFd, message2, buffer_size);
+                write(clientFd, message3, buffer_size);
             }    
         }
         if(started == true){
-            char message1[buffer_size] = "Start:";
+            char message4[buffer_size] = "Start:";
             int i = 0;
             for(; i < start.length(); i++){
-                message1[i + 6] = start[i];
+                message4[i + 6] = start[i];
             }
-            write(clientFd, message1, buffer_size);
-            char message2[buffer_size] = "Dest:";
+            write(clientFd, message4, buffer_size);
+            char message0[buffer_size] = "Dest:";
             i = 0;
             for(; i < destination.length(); i++){
-                message2[i + 5] = destination[i];
+                message0[i + 5] = destination[i];
             }
-            write(clientFd, message2, buffer_size);
+            write(clientFd, message0, buffer_size);
         }
         {
             pthread_mutex_lock(&clientLock);
             playerCount++;
-            std::cout << playerCount << std::endl;
+            // std::cout << playerCount << std::endl;
             if (playerCount >= minPlayers && started == false) {
                 getUrls();
                 started = true;
                 for (const auto& [name, fd] : usernames) {
-                    char message1[buffer_size] = "Start:";
+                    char message5[buffer_size] = "Start:";
                     int i = 0;
                     for(; i < start.length(); i++){
-                        message1[i + 6] = start[i];
+                        message5[i + 6] = start[i];
                     }
-                    write(fd, message1, buffer_size);
-                    char message2[buffer_size] = "Dest:";
+                    write(fd, message5, buffer_size);
+                    char message6[buffer_size] = "Dest:";
                     i = 0;
                     for(; i < destination.length(); i++){
-                        message2[i + 5] = destination[i];
+                        message6[i + 5] = destination[i];
                     }
-                    write(fd, message2, buffer_size);
+                    write(fd, message6, buffer_size);
                 }
             }
             pthread_mutex_unlock(&clientLock);
         }
         while (true) {
             int n = read(clientFd, buffer, sizeof(buffer));
-            if (n == 0) {
+                if (n <= 0) {
                 {
                     pthread_mutex_lock(&clientLock);
                     playerCount--;
@@ -145,12 +145,15 @@ void* handleClient(void* arg) {
                     pthread_mutex_unlock(&clientLock);
                 }
                 for (const auto& [name, fd] : usernames) {
-                    char message1[buffer_size] = "Quited:";
-                    int i = 0;
-                    for(; i < username.length(); i++){
-                        message1[i + 7] = username[i];
+                    if(fd != clientFd)
+                    {
+                        char message7[buffer_size] = "Quited:";
+                        int i = 0;
+                        for(; i < username.length(); i++){
+                            message7[i + 7] = username[i];
+                        }
+                    write(fd, message7, buffer_size);
                     }
-                    write(fd, message1, buffer_size);
                 }
                 pthread_mutex_lock(&clientLock);
                 usernames.erase(username);
@@ -159,45 +162,42 @@ void* handleClient(void* arg) {
                 close(clientFd);
                 break;
             }
-            std::string message(buffer, n);
+            std::string message8(buffer, n);
             //std::cout << message << std::endl;
-            // if(message.rfind("text/html",0) == 0)
-            //{
-                pthread_mutex_lock(&clientLock);
-                std::string article = message;
-                history[username].push_back(article.erase(0, 30));
-                pthread_mutex_unlock(&clientLock);
-                std::cout << message << std::endl;
-                if(message == destination){
-                    for (const auto& [name, fd] : usernames) {
-                        char message1[buffer_size] = "Win:";
-                        int i = 0;
-                        for(; i < username.length(); i++){
-                            message1[i + 4] = username[i];
-                        }
-                        message1[i + 4] = ' ';
-                        i++;
-                        for(auto& article : history.at(username)){
-                            for(int j=0; j < article.length(); j++){
-                                message1[i + 4] = article[j];
-                                i++;
-                            }
-                            message1[i + 4] = ' ';
-                            i++;
-                        }
-                        write(fd, message1, buffer_size);
-                    }
-                    started = false;
-                    // for(auto &itr: history)
-                    // {
-                    //     std::cout << itr.first;
-                    //     for (std::string i: itr.second)
-                    //     {
-                    //         std::cout << " " << i << std::endl;
-                    //     }
-                    // }                    
+            pthread_mutex_lock(&clientLock);
+            std::string article = message8;
+            history[username].push_back(article.erase(0, 30));
+            pthread_mutex_unlock(&clientLock);
+            // std::cout << message8 << std::endl;
+            if(message8 == destination){
+                char message9[buffer_size] = "Win:";
+                int i = 0;
+                for(; i < username.length(); i++){
+                    message9[i + 4] = username[i];
                 }
-            //}
+                message9[i + 4] = ' ';
+                i++;
+                for(auto& article : history.at(username)){
+                    for(int j=0; j < article.length(); j++){
+                        message9[i + 4] = article[j];
+                        i++;
+                    }
+                    message9[i + 4] = ' ';
+                    i++;
+                }
+                for (const auto& [name, fd] : usernames) {
+                    write(fd, message9, buffer_size);
+                }
+                started = false;
+                // for(auto &itr: history)
+                // {
+                //     std::cout << itr.first;
+                //     for (std::string i: itr.second)
+                //     {
+                //         std::cout << " " << i << std::endl;
+                //     }
+                // }                    
+            }
         }
     }
     pthread_mutex_lock(&clientLock);
